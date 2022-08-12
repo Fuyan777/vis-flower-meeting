@@ -31,17 +31,25 @@
           <li>頷き回数   ：{{ nodCount }}</li>
           <li>予備動作回数：0</li>
         </div>
+        <button class="test-start-button">フィードバック開始</button>
       </div>
     </div>
     <div class="setting-recognition">
+      <h2>■ 設定</h2>
+      <div class="player-status">{{ playerStatusText }}</div>
+      <button
+        v-for="btn in playerSettingButtons" 
+        :key="btn.id"
+        @click="btnClicked(btn)">{{btn.title}}
+      </button>
       <div class="speech" v-bind="speechCount">
-        <h2>■ 発話認識</h2>
+        <h3>● 発話認識</h3>
         <div class="count-label">{{ speechCount }}回</div>
         <button id="detection-speech-start" v-on:click="startDetectionSpeech">start</button>
         <button id="detection-speech-end" v-on:click="stopVAD">stop</button>
       </div>
       <div class="face">
-        <h2>■ 頷き認識</h2>
+        <h3>● 頷き認識</h3>
         <div class="count-label">{{ nodCount }}回</div>
         <button id="detection-nod-start" v-on:click="startTracking">start</button>
         <button id="detection-nod-end" v-on:click="stopTracking">stop</button>
@@ -78,6 +86,21 @@ export default {
       flowerPositionArray: [],
       budPositionArray: [],
       faceIntervalTimer: null,
+      playerStatusText: "no setting",
+      playerSettingButtons: [
+        { 
+          cmd: 'setPlayer1',
+          title: "player-1"
+        },
+        { 
+          cmd: 'setPlayer2',
+          title: "player-2"
+        },
+        { 
+          cmd: 'setPlayer3',
+          title: "player-3"
+        },
+      ],
     }
   },
   mounted: function () {
@@ -117,6 +140,24 @@ export default {
     }
   },
   methods: {
+    setPlayer: function(num) {
+      this.playerStatusText = "player-" + num;
+    },
+    btnClicked(command){
+      switch(command.cmd){
+        case 'setPlayer1':
+          this.setPlayer(1);
+          break
+        case 'setPlayer2':
+          this.setPlayer(2);
+          break
+        case 'setPlayer3':
+          this.setPlayer(3);
+          break
+        default:
+          this.setPlayer(1);
+      }
+    },
     countMeetingInfo: function() {
       this.flowerPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
       this.budPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
@@ -209,11 +250,11 @@ export default {
 
 <style>
 button {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 500;
   position: relative;
   display: inline-block;
-  padding: 1rem 3rem;
+  padding: 1rem 1.3rem;
   cursor: pointer;
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
