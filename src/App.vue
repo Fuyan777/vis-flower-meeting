@@ -51,7 +51,8 @@
 
 <script>
 import vad from 'voice-activity-detection';
-import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection'
+import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
+import { initializeApp } from "firebase/app";
 
 export default {
   name: 'App',
@@ -77,6 +78,17 @@ export default {
     }
   },
   mounted: function () {
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-zJppYUUusYKD5Ouzqyt9KINwocI29x8",
+      authDomain: "vis-flower-meeting.firebaseapp.com",
+      projectId: "vis-flower-meeting",
+      storageBucket: "vis-flower-meeting.appspot.com",
+      messagingSenderId: "501640279903",
+      appId: "1:501640279903:web:84dabab596d034d85928ea"
+    };
+    const app = initializeApp(firebaseConfig);
+    console.log(app);
+
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     this.video = document.querySelector("video");
     navigator.mediaDevices.getUserMedia({
