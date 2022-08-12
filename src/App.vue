@@ -34,7 +34,8 @@
           <li>頷き回数   ：{{ nodCount }}</li>
           <li>予備動作回数：0</li>
         </div>
-        <button class="test-start-button" v-on:click="startFeedback">フィードバック開始</button>
+        <button class="test-start-button" v-on:click="startFeedback">Start</button>
+        <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
       </div>
     </div>
     <div class="setting-recognition">
@@ -48,14 +49,14 @@
       <div class="speech" v-bind="speechCount">
         <h3>● 発話認識</h3>
         <div class="count-label">{{ speechCount }}回</div>
-        <button id="detection-speech-start" v-on:click="startDetectionSpeech">start</button>
-        <button id="detection-speech-end" v-on:click="stopVAD">stop</button>
+        <button id="detection-speech-start" v-on:click="startDetectionSpeech">Start</button>
+        <button id="detection-speech-end" v-on:click="stopVAD">Stop</button>
       </div>
       <div class="face">
         <h3>● 頷き認識</h3>
         <div class="count-label">{{ nodCount }}回</div>
-        <button id="detection-nod-start" v-on:click="startTracking">start</button>
-        <button id="detection-nod-end" v-on:click="stopTracking">stop</button>
+        <button id="detection-nod-start" v-on:click="startTracking">Start</button>
+        <button id="detection-nod-end" v-on:click="stopTracking">Stop</button>
       </div>
       <video ref="video" id="video" width="500" height="500" autoplay></video>
     </div>
@@ -106,6 +107,7 @@ export default {
         },
       ],
       firestoreDB: null,
+      unsubscribeDB: null,
     }
   },
   mounted: function () {
@@ -150,12 +152,11 @@ export default {
 
       // 後ほどmounted
       const app = initializeApp(firebaseConfig);
-      console.log(app);
       this.firestoreDB = getFirestore(app);
       console.log(this.firestoreDB);
 
       const q = query(collection(this.firestoreDB, "players"));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      this.unsubscribeDB = onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
             console.log("New Add: ", change.doc.data());
@@ -169,7 +170,9 @@ export default {
           }
         });
       });
-      console.log(unsubscribe);
+    },
+    stopFeedback: function() {
+      this.unsubscribeDB();
     },
     setPlayer: function(num) {
       this.playerStatusText = "player-" + num;
