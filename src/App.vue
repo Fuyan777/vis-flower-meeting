@@ -8,11 +8,13 @@
           <!-- X：70-450, Y：50-250 -->
           <img
             id="flower"
+            width="30"
             :src="require(`@/assets/flower-red.png`)"
             :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
           >
           <img
             id="flower-2"
+            width="30"
             v-if="index % 3 === 1"
             :src="require(`@/assets/flower-blue.png`)"
             :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
@@ -20,6 +22,7 @@
         <div class="flower" v-for="(item, index) in budPositionArray" :key="index">
           <img
             id="bud-white"
+            width="20"
             v-if="index % 5 === 1"
             :src="require(`@/assets/bud-white.png`)"
             :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
@@ -31,7 +34,7 @@
           <li>頷き回数   ：{{ nodCount }}</li>
           <li>予備動作回数：0</li>
         </div>
-        <button class="test-start-button">フィードバック開始</button>
+        <button class="test-start-button" v-on:click="startFeedback">フィードバック開始</button>
       </div>
     </div>
     <div class="setting-recognition">
@@ -62,8 +65,9 @@
 <script>
 import vad from 'voice-activity-detection';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebase.js"
+import { initializeApp } from "firebase/app";
+import { getFirestore, onSnapshot, collection, query } from 'firebase/firestore';
 
 export default {
   name: 'App',
@@ -86,7 +90,7 @@ export default {
       flowerPositionArray: [],
       budPositionArray: [],
       faceIntervalTimer: null,
-      playerStatusText: "no setting",
+      playerStatusText: "player-1",//"no setting",
       playerSettingButtons: [
         { 
           cmd: 'setPlayer1',
@@ -101,12 +105,10 @@ export default {
           title: "player-3"
         },
       ],
+      firestoreDB: null,
     }
   },
   mounted: function () {
-    const app = initializeApp(firebaseConfig);
-    console.log(app);
-
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     this.video = document.querySelector("video");
     navigator.mediaDevices.getUserMedia({
@@ -140,6 +142,35 @@ export default {
     }
   },
   methods: {
+    startFeedback: async function() {
+      if (this.playerStatusText === "no setting") {
+        alert("playerを設定してください。");
+        return;
+      }
+
+      // 後ほどmounted
+      const app = initializeApp(firebaseConfig);
+      console.log(app);
+      this.firestoreDB = getFirestore(app);
+      console.log(this.firestoreDB);
+
+      const q = query(collection(this.firestoreDB, "players"));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            console.log("New Add: ", change.doc.data());
+          }
+          if (change.type === "modified") {
+            console.log("Modified: ", change.doc.data());
+            console.log("Player: ", change.doc.id);
+          }
+          if (change.type === "removed") {
+            console.log("Removed: ", change.doc.data());
+          }
+        });
+      });
+      console.log(unsubscribe);
+    },
     setPlayer: function(num) {
       this.playerStatusText = "player-" + num;
     },
