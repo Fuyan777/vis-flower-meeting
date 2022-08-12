@@ -4,30 +4,56 @@
       <h2>■ フィードバック</h2>
       <div class="bed-block">
         <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="600" :style="{position:`relative`}">
-        <div class="flower" v-for="(item, index) in flowerPositionArray" :key="index">
+        <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="index">
           <!-- X：70-450, Y：50-250 -->
           <img
-            id="flower"
+            id="flower-red"
             width="30"
             :src="require(`@/assets/flower-red.png`)"
             :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
           >
+        </div>
+        <div class="flower" v-for="(item, index) in flowerBluePositionArray" :key="index">
           <img
-            id="flower-2"
+            id="flower-blue"
             width="30"
-            v-if="index % 3 === 1"
             :src="require(`@/assets/flower-blue.png`)"
             :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
           >
-        <div class="flower" v-for="(item, index) in budPositionArray" :key="index">
+        </div>
+        <div class="flower" v-for="(item, index) in flowerWhitePositionArray" :key="index">
           <img
-            id="bud-white"
-            width="20"
-            v-if="index % 5 === 1"
-            :src="require(`@/assets/bud-white.png`)"
-            :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
+            id="flower-white"
+            width="30"
+            :src="require(`@/assets/flower-white.png`)"
+            :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
           >
         </div>
+        <div class="bud-block">
+          <div class="flower" v-for="(item, index) in budRedPositionArray" :key="index">
+            <img
+              id="bud-white"
+              width="20"
+              :src="require(`@/assets/bud-red.png`)"
+              :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
+            >
+          </div>
+          <div class="flower" v-for="(item, index) in budBluePositionArray" :key="index">
+            <img
+              id="bud-white"
+              width="20"
+              :src="require(`@/assets/bud-blue.png`)"
+              :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
+            >
+          </div>
+          <div class="flower" v-for="(item, index) in budWhitePositionArray" :key="index">
+            <img
+              id="bud-white"
+              width="20"
+              :src="require(`@/assets/bud-white.png`)"
+              :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
+            >
+          </div>
         </div>
         <div class="count-all">
           <li>発話回数   ：{{ speechCount }}</li>
@@ -76,10 +102,12 @@ export default {
   },
   data: function() {
     return {
+      // nod detection
       vadObject: null,
       context: null,
       speechCount: 0,
       isSpeechCount: false,
+      // nod detection
       faceModel: null,
       video: null,
       detector: null,
@@ -88,8 +116,17 @@ export default {
       nodCount: 0,
       position_flower_x: 70,
       position_flower_y: 50,
-      flowerPositionArray: [],
-      budPositionArray: [],
+      // Flower Array
+      flowerRedPositionArray: [],
+      flowerBluePositionArray: [],
+      flowerWhitePositionArray: [],
+      // Bud Array
+      budRedPositionArray: [],
+      budBluePositionArray: [],
+      budWhitePositionArray: [],
+      beforeRedSpeechMotivation: 0,
+      beforeBlueSpeechMotivation: 0,
+      beforeWhiteSpeechMotivation: 0,
       faceIntervalTimer: null,
       playerStatusText: "player-1",//"no setting",
       playerSettingButtons: [
@@ -160,10 +197,37 @@ export default {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
             console.log("New Add: ", change.doc.data());
+            console.log("ID: " + change.doc.id + " => Data: " + change.doc.data());
+            this.setFlowerOfPlayer(change.doc.id, change.doc.data());
           }
           if (change.type === "modified") {
             console.log("Modified: ", change.doc.data());
             console.log("Player: ", change.doc.id);
+            console.log("before: "+ this.beforeSpeechMotivation + " => after: " + change.doc.data().motivation);
+
+            switch(change.doc.id) {
+              case 'player-1':
+                if (this.beforeRedSpeechMotivation < change.doc.data().motivation) {
+                  this.pushBudOfPlayer(change.doc.id, change.doc.data().motivation);
+                } else {
+                  this.pushFlowerOfPlayer(change.doc.id);
+                }
+                break
+              case 'player-2':
+                if (this.beforeBlueSpeechMotivation < change.doc.data().motivation) {
+                  this.pushBudOfPlayer(change.doc.id, change.doc.data().motivation);
+                } else {
+                  this.pushFlowerOfPlayer(change.doc.id);
+                }
+                break
+              case 'player-3':
+                if (this.beforeWhiteSpeechMotivation < change.doc.data().motivation) {
+                  this.pushBudOfPlayer(change.doc.id, change.doc.data().motivation);
+                } else {
+                  this.pushFlowerOfPlayer(change.doc.id);
+                }
+                break
+            }
           }
           if (change.type === "removed") {
             console.log("Removed: ", change.doc.data());
@@ -171,14 +235,53 @@ export default {
         });
       });
     },
+    setFlowerOfPlayer: function(playerID, docData) {
+      const flowerCount = docData.speech + docData.nod;
+      for (let i=0; i<flowerCount; i++) {
+        this.pushFlowerOfPlayer(playerID);
+      }
+
+      for (let i=0; i<docData.motivation; i++) {
+        this.pushBudOfPlayer(playerID);
+      }
+    },
+    pushFlowerOfPlayer: function(playerID) {
+      switch(playerID) {
+        case 'player-1':
+          this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          break
+        case 'player-2':
+          this.flowerBluePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          break
+        case 'player-3':
+          this.flowerWhitePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          break
+      }
+    },
+    pushBudOfPlayer: function(playerID, motivation) {
+      switch(playerID) {
+        case 'player-1':
+          this.beforeRedSpeechMotivation = motivation;
+          this.budRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          break
+        case 'player-2':
+          this.beforeBlueSpeechMotivation = motivation;
+          this.budBluePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          break
+        case 'player-3':
+          this.beforeWhiteSpeechMotivation = motivation;
+          this.budWhitePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          break
+      }
+    },
     stopFeedback: function() {
       this.unsubscribeDB();
     },
     setPlayer: function(num) {
       this.playerStatusText = "player-" + num;
     },
-    btnClicked(command){
-      switch(command.cmd){
+    btnClicked(command) {
+      switch(command.cmd) {
         case 'setPlayer1':
           this.setPlayer(1);
           break
@@ -193,8 +296,8 @@ export default {
       }
     },
     countMeetingInfo: function() {
-      this.flowerPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
-      this.budPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+      this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+      // this.budRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
     },
     getRandom: function(min, max) {
       min = Math.ceil(min);
