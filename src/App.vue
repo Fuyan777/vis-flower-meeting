@@ -62,6 +62,7 @@
         </div>
         <button class="test-start-button" v-on:click="startFeedback">Start</button>
         <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
+        <button class="test-all-reset-button" v-on:click="resetCountPlayer">All Reset</button>
       </div>
     </div>
     <div class="setting-recognition">
@@ -94,7 +95,7 @@ import vad from 'voice-activity-detection';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import firebaseConfig from "./firebase.js"
 import { initializeApp } from "firebase/app";
-import { getFirestore, onSnapshot, collection, query } from 'firebase/firestore';
+import { getFirestore, onSnapshot, collection, query, doc, updateDoc } from 'firebase/firestore';
 
 export default {
   name: 'App',
@@ -145,6 +146,11 @@ export default {
       ],
       firestoreDB: null,
       unsubscribeDB: null,
+      countStatus: {
+        motivation: 0,
+        nod: 0,
+        speech: 0
+      }
     }
   },
   mounted: function () {
@@ -164,10 +170,12 @@ export default {
   },
   watch: {
     nodCount: function() {
-      this.countMeetingInfo();
+      // this.countMeetingInfo();
+      this.postCountPlayer();
     },
     speechCount: function() {
-      this.countMeetingInfo();
+      // this.countMeetingInfo();
+      this.postCountPlayer();
     },
   },
   computed: {
@@ -197,13 +205,12 @@ export default {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
             console.log("New Add: ", change.doc.data());
-            console.log("ID: " + change.doc.id + " => Data: " + change.doc.data());
             this.setFlowerOfPlayer(change.doc.id, change.doc.data());
+            this.countStatus = change.doc.data(); 
           }
           if (change.type === "modified") {
             console.log("Modified: ", change.doc.data());
             console.log("Player: ", change.doc.id);
-            console.log("before: "+ this.beforeSpeechMotivation + " => after: " + change.doc.data().motivation);
 
             switch(change.doc.id) {
               case 'player-1':
@@ -274,6 +281,24 @@ export default {
           break
       }
     },
+    postCountPlayer: async function() {
+      const playersRef = doc(this.firestoreDB, "players", this.playerStatusText)
+      await updateDoc(playersRef, {
+        motivation: this.countStatus.motivation,
+        nod: this.countStatus.nod,
+        speech: this.countStatus.speech
+      });
+    },
+    resetCountPlayer: async function() {
+      [0, 1, 2].forEach(async (index) => {
+        const playersRef = doc(this.firestoreDB, "players", this.playerSettingButtons[index].title);
+        await updateDoc(playersRef, {
+          motivation: 0,
+          nod: 0,
+          speech: 0
+        });
+      });
+    },
     stopFeedback: function() {
       this.unsubscribeDB();
     },
@@ -332,6 +357,7 @@ export default {
         if (this.nodAverageScore + 30 < faces[0].keypoints[1].y) {
           console.log("nodカウント！！！！！！！！！！！！！！");
           this.nodCount += 1;
+          this.countStatus.nod += 1;
           console.log(this.nodCount);
         }
       }, 1000) // 1秒間
@@ -351,6 +377,8 @@ export default {
         }
         console.log("speechカウント！！！！！！！！！！！！！！");
         this.speechCount += 1;
+        this.countStatus.speech += 1;
+        console.log("this.countStatus.speech: "+this.countStatus.speech);
       })
     },
     setVAD: function(update, stopHandler) {
