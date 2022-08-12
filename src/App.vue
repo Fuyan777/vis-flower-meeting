@@ -33,19 +33,21 @@
         </div>
       </div>
     </div>
-    <div class="speech" v-bind="speechCount">
-      <h2>■ 発話認識</h2>
-      <div class="count-label">{{ speechCount }}回</div>
-      <button id="detection-speech-start" v-on:click="startDetectionSpeech">start</button>
-      <button id="detection-speech-end" v-on:click="stopVAD">stop</button>
+    <div class="setting-recognition">
+      <div class="speech" v-bind="speechCount">
+        <h2>■ 発話認識</h2>
+        <div class="count-label">{{ speechCount }}回</div>
+        <button id="detection-speech-start" v-on:click="startDetectionSpeech">start</button>
+        <button id="detection-speech-end" v-on:click="stopVAD">stop</button>
+      </div>
+      <div class="face">
+        <h2>■ 頷き認識</h2>
+        <div class="count-label">{{ nodCount }}回</div>
+        <button id="detection-nod-start" v-on:click="startTracking">start</button>
+        <button id="detection-nod-end" v-on:click="stopTracking">stop</button>
+      </div>
+      <video ref="video" id="video" width="500" height="500" autoplay></video>
     </div>
-    <div class="face">
-      <h2>■ 頷き認識</h2>
-      <div class="count-label">{{ nodCount }}回</div>
-      <button id="detection-nod-start" v-on:click="startTracking">start</button>
-      <button id="detection-nod-end" v-on:click="stopTracking">stop</button>
-    </div>
-    <video ref="video" id="video" width="500" height="500" autoplay></video>
   </div>
 </template>
 
@@ -53,6 +55,7 @@
 import vad from 'voice-activity-detection';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import { initializeApp } from "firebase/app";
+import firebaseConfig from "./firebase.js"
 
 export default {
   name: 'App',
@@ -78,14 +81,6 @@ export default {
     }
   },
   mounted: function () {
-    const firebaseConfig = {
-      apiKey: "AIzaSyC-zJppYUUusYKD5Ouzqyt9KINwocI29x8",
-      authDomain: "vis-flower-meeting.firebaseapp.com",
-      projectId: "vis-flower-meeting",
-      storageBucket: "vis-flower-meeting.appspot.com",
-      messagingSenderId: "501640279903",
-      appId: "1:501640279903:web:84dabab596d034d85928ea"
-    };
     const app = initializeApp(firebaseConfig);
     console.log(app);
 
@@ -101,7 +96,7 @@ export default {
       console.log(e)
     })
 
-    this.startTracking();
+    // this.startTracking();
   },
   watch: {
     nodCount: function() {
