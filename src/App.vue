@@ -80,7 +80,7 @@
         <button id="detection-speech-end" v-on:click="stopVAD">Stop</button>
       </div>
       <div class="face">
-        <h3>● 頷き認識</h3>
+        <h3>● 頷き & 予備動作認識</h3>
         <div class="count-label">{{ nodCount }}回</div>
         <button id="detection-nod-start" v-on:click="startTracking">Start</button>
         <button id="detection-nod-end" v-on:click="stopTracking">Stop</button>
@@ -103,11 +103,12 @@ export default {
   },
   data: function() {
     return {
-      // nod detection
+      // speech detection
       vadObject: null,
       context: null,
       speechCount: 0,
       isSpeechCount: false,
+      isSpeech: false,
       // nod detection
       faceModel: null,
       video: null,
@@ -117,6 +118,7 @@ export default {
       nodCount: 0,
       position_flower_x: 70,
       position_flower_y: 50,
+      motivationCount: 0,
       // Flower Array
       flowerRedPositionArray: [],
       flowerBluePositionArray: [],
@@ -175,6 +177,9 @@ export default {
     },
     speechCount: function() {
       // this.countMeetingInfo();
+      this.postCountPlayer();
+    },
+    motivationCount: function() {
       this.postCountPlayer();
     },
   },
@@ -360,8 +365,18 @@ export default {
           this.countStatus.nod += 1;
           console.log(this.nodCount);
         }
+
+        if (!this.isSpeech) { return }
+        const topLipPoint = faces[0].keypoints[13].y
+        const underLipPoint = faces[0].keypoints[14].y
+        const mouseOpened = underLipPoint - topLipPoint
+        console.log("top: "+topLipPoint+"under: "+underLipPoint+"\n"+"mouseOpened: "+mouseOpened);
+        if (10 < mouseOpened && mouseOpened < 20) {
+          console.log("motivationカウント！！！！！！！！！！！！！！");
+          this.motivationCount += 1;
+          this.countStatus.motivation += 1;
+        }
       }, 1000) // 1秒間
-      this.startDetectionSpeech();
     },
     stopTracking: function() {
       this.detector = null;
@@ -385,9 +400,11 @@ export default {
       let vadOptions = {
         onVoiceStart: function() {
             console.log('voice start');
+            this.isSpeech = true;
         },
         onVoiceStop: function() {
             console.log('voice stop');
+            this.isSpeech = false;
             stopHandler();
         },
         onUpdate: function(val) {
@@ -406,6 +423,7 @@ export default {
     stopVAD: function() {
       if(this.vadObject) {
         // 音声検出を終了する
+        console.log("vadObject destroy");
         this.vadObject.destroy();
       }
    }
