@@ -55,33 +55,39 @@
             >
           </div>
         </div>
-        <div class="count-all">
-          <li>発話回数   ：{{ speechCount }}</li>
-          <li>頷き回数   ：{{ nodCount }}</li>
-          <li>予備動作回数：0</li>
+        <div class="player-status"><h3>1. プレイヤー設定：{{ playerStatusText }}</h3></div>
+        <button
+          v-for="btn in playerSettingButtons" 
+          :key="btn.id"
+          @click="btnClicked(btn)">{{btn.title}}:{{ btn.color }}
+        </button>
+        <div class="feedback-controll">
+          <h3>2. DB接続</h3>
+          <button class="test-start-button" v-on:click="startFeedback">Start</button>
+          <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
         </div>
-        <button class="test-start-button" v-on:click="startFeedback">Start</button>
-        <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
-        <button class="test-all-reset-button" v-on:click="resetCountPlayer">All Reset</button>
+        <div class="tracking-controll">
+          <h3>3. 会話行動検知</h3>
+          <button class="test-start-button" v-on:click="startFeedback">Start</button>
+          <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
+        </div>
       </div>
     </div>
     <div class="setting-recognition">
-      <h2>■ 設定</h2>
-      <div class="player-status">{{ playerStatusText }}</div>
-      <button
-        v-for="btn in playerSettingButtons" 
-        :key="btn.id"
-        @click="btnClicked(btn)">{{btn.title}}
-      </button>
+      <h2>■ デバッグ</h2>
+      <div class="count-all">
+        <li>発話回数   ：{{ speechCount }}</li>
+        <li>頷き回数   ：{{ nodCount }}</li>
+        <li>予備動作回数：{{ motivationCount }}</li>
+        <button class="test-all-reset-button" v-on:click="resetCountPlayer">Reset Count</button>
+      </div>
       <div class="speech" v-bind="speechCount">
         <h3>● 発話認識</h3>
-        <div class="count-label">{{ speechCount }}回</div>
         <button id="detection-speech-start" v-on:click="startDetectionSpeech">Start</button>
         <button id="detection-speech-end" v-on:click="stopVAD">Stop</button>
       </div>
       <div class="face">
         <h3>● 頷き & 予備動作認識</h3>
-        <div class="count-label">{{ nodCount }}回</div>
         <button id="detection-nod-start" v-on:click="startTracking">Start</button>
         <button id="detection-nod-end" v-on:click="stopTracking">Stop</button>
       </div>
@@ -135,15 +141,18 @@ export default {
       playerSettingButtons: [
         { 
           cmd: 'setPlayer1',
-          title: "player-1"
+          title: "player-1",
+          color: "赤",
         },
         { 
           cmd: 'setPlayer2',
-          title: "player-2"
+          title: "player-2",
+          color: "青",
         },
         { 
           cmd: 'setPlayer3',
-          title: "player-3"
+          title: "player-3",
+          color: "白",
         },
       ],
       firestoreDB: null,
@@ -246,6 +255,14 @@ export default {
           }
         });
       });
+    },
+    startAllTracking: function() {
+      this.startTracking();
+      this.startDetectionSpeech();
+    },
+    stopAllTracking: function() {
+      this.stopFeedback();
+      this.stopVAD();
     },
     setFlowerOfPlayer: function(playerID, docData) {
       const flowerCount = docData.speech + docData.nod;
@@ -353,7 +370,7 @@ export default {
         if (this.meanPose.length < 10) {
           this.nodCount = 0;
           this.nodAverageScore = this.calcAverage;
-          console.log("skippppppp");
+          console.log("nod count: skippppppp");
           return
         }
 
@@ -366,16 +383,17 @@ export default {
           console.log(this.nodCount);
         }
 
-        if (!this.isSpeech) { return }
         const topLipPoint = faces[0].keypoints[13].y
         const underLipPoint = faces[0].keypoints[14].y
         const mouseOpened = underLipPoint - topLipPoint
-        console.log("top: "+topLipPoint+"under: "+underLipPoint+"\n"+"mouseOpened: "+mouseOpened);
-        if (10 < mouseOpened && mouseOpened < 20) {
+        if (!this.isSpeech && (10 < mouseOpened && mouseOpened < 20)) {
+          console.log("top: "+topLipPoint+"under: "+underLipPoint+"\n"+"mouseOpened: "+mouseOpened);
           console.log("motivationカウント！！！！！！！！！！！！！！");
           this.motivationCount += 1;
           this.countStatus.motivation += 1;
+          return
         }
+        console.log("motivation count: skippppppp");
       }, 1000) // 1秒間
     },
     stopTracking: function() {
@@ -421,12 +439,9 @@ export default {
       }
     },
     stopVAD: function() {
-      if(this.vadObject) {
-        // 音声検出を終了する
-        console.log("vadObject destroy");
-        this.vadObject.destroy();
-      }
-   }
+      console.log("vadObject destroy");
+      this.vadObject.destroy();
+    }
   }
 }
 </script>
