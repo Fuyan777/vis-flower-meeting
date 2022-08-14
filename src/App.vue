@@ -4,16 +4,26 @@
       <h2>■ フィードバック</h2>
       <div class="bed-block">
         <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="600" :style="{position:`relative`}">
-        <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="index">
+        <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="`red-${index}`">
           <!-- X：70-450, Y：50-250 -->
           <img
             id="flower-red"
             width="30"
+            v-if="flowerRedPositionArray.length < 10"
             :src="require(`@/assets/flower-red.png`)"
             :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
           >
         </div>
-        <div class="flower" v-for="(item, index) in flowerBluePositionArray" :key="index">
+        <div class="flower" v-for="(item, index) in bigFlowerRedPositionArray" :key="`big-${index}`">
+          <img
+            id="flower-red"
+            width="60"
+            v-if="bigFlowerRedPositionArray.length > 0"
+            :src="require(`@/assets/flower-red.png`)"
+            :style="{position: 'absolute', top: `${70+item.y}px`, left: `${50+item.x}px` }"
+          >
+        </div>
+        <div class="flower" v-for="(item, index) in flowerBluePositionArray" :key="`blue-${index}`">
           <img
             id="flower-blue"
             width="30"
@@ -21,7 +31,7 @@
             :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
           >
         </div>
-        <div class="flower" v-for="(item, index) in flowerWhitePositionArray" :key="index">
+        <div class="flower" v-for="(item, index) in flowerWhitePositionArray" :key="`white-${index}`">
           <img
             id="flower-white"
             width="30"
@@ -30,7 +40,7 @@
           >
         </div>
         <div class="bud-block">
-          <div class="flower" v-for="(item, index) in budRedPositionArray" :key="index">
+          <div class="flower" v-for="(item, index) in budRedPositionArray" :key="`bud-red-${index}`">
             <img
               id="bud-white"
               width="20"
@@ -38,15 +48,15 @@
               :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
             >
           </div>
-          <div class="flower" v-for="(item, index) in budBluePositionArray" :key="index">
+          <div class="flower" v-for="(item, index) in budBluePositionArray" :key="`bud-blue-${index}`">
             <img
-              id="bud-white"
+              id="bud-blue"
               width="20"
               :src="require(`@/assets/bud-blue.png`)"
               :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
             >
           </div>
-          <div class="flower" v-for="(item, index) in budWhitePositionArray" :key="index">
+          <div class="flower" v-for="(item, index) in budWhitePositionArray" :key="`bud-white-${index}`">
             <img
               id="bud-white"
               width="20"
@@ -68,8 +78,8 @@
         </div>
         <div class="tracking-controll">
           <h3>3. 会話行動検知</h3>
-          <button class="test-start-button" v-on:click="startFeedback">Start</button>
-          <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
+          <button class="test-start-button" v-on:click="startAllTracking">Start</button>
+          <button class="test-stop-button" v-on:click="stopAllTracking">Stop</button>
         </div>
       </div>
     </div>
@@ -129,6 +139,8 @@ export default {
       flowerRedPositionArray: [],
       flowerBluePositionArray: [],
       flowerWhitePositionArray: [],
+      // Big Flower Array
+      bigFlowerRedPositionArray: [],
       // Bud Array
       budRedPositionArray: [],
       budBluePositionArray: [],
@@ -177,6 +189,10 @@ export default {
       console.log(e)
     })
 
+    const app = initializeApp(firebaseConfig);
+    this.firestoreDB = getFirestore(app);
+    console.log(this.firestoreDB);
+
     // this.startTracking();
   },
   watch: {
@@ -208,11 +224,6 @@ export default {
         alert("playerを設定してください。");
         return;
       }
-
-      // 後ほどmounted
-      const app = initializeApp(firebaseConfig);
-      this.firestoreDB = getFirestore(app);
-      console.log(this.firestoreDB);
 
       const q = query(collection(this.firestoreDB, "players"));
       this.unsubscribeDB = onSnapshot(q, (snapshot) => {
@@ -261,7 +272,7 @@ export default {
       this.startDetectionSpeech();
     },
     stopAllTracking: function() {
-      this.stopFeedback();
+      this.stopTracking();
       this.stopVAD();
     },
     setFlowerOfPlayer: function(playerID, docData) {
@@ -274,10 +285,19 @@ export default {
         this.pushBudOfPlayer(playerID);
       }
     },
+    stopFeedback: function() {
+      console.log("stopFeedback");
+      this.unsubscribeDB();
+    },
     pushFlowerOfPlayer: function(playerID) {
       switch(playerID) {
         case 'player-1':
-          this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          if (this.flowerRedPositionArray.length >= 10) {
+            this.bigFlowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+            this.flowerRedPositionArray.splice(0);
+          } else {
+            this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          }
           break
         case 'player-2':
           this.flowerBluePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
@@ -319,10 +339,8 @@ export default {
           nod: 0,
           speech: 0
         });
+        console.log("Reset player: ", this.playerSettingButtons[index].title);
       });
-    },
-    stopFeedback: function() {
-      this.unsubscribeDB();
     },
     setPlayer: function(num) {
       this.playerStatusText = "player-" + num;
@@ -441,6 +459,7 @@ export default {
     stopVAD: function() {
       console.log("vadObject destroy");
       this.vadObject.destroy();
+      this.vadObject = null;
     }
   }
 }
