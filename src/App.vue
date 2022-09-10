@@ -3,7 +3,7 @@
     <div class="gardening">
       <h2>■ フィードバック</h2>
       <div class="bed-block">
-        <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="300" :style="{position:`relative`}">
+        <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="500" :style="{position:`relative`}">
         <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="`red-${index}`">
           <img
             id="flower-red"
@@ -479,7 +479,7 @@ button {
   color: #fff;
   background: #f56500;
   border: 1px solid #ccc;
-  margin: 10px;
+  margin: 0px;
 }
 
 .bed-block {
