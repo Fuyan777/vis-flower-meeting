@@ -1,11 +1,18 @@
 <template>
   <div id="app">
+    <div class="graph">
+      <h2>■ グラフ表示</h2>
+      <div class="bar-graph">
+        <BarChart datasetIdKey="ss"/>
+        <BarChart />
+        <BarChart />
+      </div>
+    </div>
     <div class="gardening">
       <h2>■ フィードバック</h2>
       <div class="bed-block">
-        <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="600" :style="{position:`relative`}">
+        <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="300" :style="{position:`relative`}">
         <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="`red-${index}`">
-          <!-- X：70-450, Y：50-250 -->
           <img
             id="flower-red"
             width="30"
@@ -112,10 +119,12 @@ import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detec
 import firebaseConfig from "./firebase.js"
 import { initializeApp } from "firebase/app";
 import { getFirestore, onSnapshot, collection, query, doc, updateDoc } from 'firebase/firestore';
+import BarChart from "./components/BarChart.vue";
 
 export default {
   name: 'App',
   components: {
+    BarChart,
   },
   data: function() {
     return {
@@ -491,5 +500,9 @@ button {
 
 .flower-block {
   position: absolute;
+}
+
+.bar-graph {
+  display: flex;
 }
 </style>
