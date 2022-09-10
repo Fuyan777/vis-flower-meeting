@@ -1,13 +1,5 @@
 <template>
   <div id="app">
-    <div class="graph">
-      <h2>■ グラフ表示</h2>
-      <div class="bar-graph">
-        <BarChart datasetIdKey="ss"/>
-        <BarChart />
-        <BarChart />
-      </div>
-    </div>
     <div class="gardening">
       <h2>■ フィードバック</h2>
       <div class="bed-block">
@@ -119,13 +111,10 @@ import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detec
 import firebaseConfig from "./firebase.js"
 import { initializeApp } from "firebase/app";
 import { getFirestore, onSnapshot, collection, query, doc, updateDoc } from 'firebase/firestore';
-import BarChart from "./components/BarChart.vue";
 
 export default {
   name: 'App',
-  components: {
-    BarChart,
-  },
+  components: {},
   data: function() {
     return {
       // speech detection
