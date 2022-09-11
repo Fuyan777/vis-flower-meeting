@@ -2,41 +2,34 @@
   <div id="app">
     <div class="gardening">
       <h2>■ フィードバック</h2>
-      <div class="bed-block">
-        <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="500" :style="{position:`relative`}">
-        <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="`red-${index}`">
-          <img
-            id="flower-red"
-            width="30"
-            v-if="flowerRedPositionArray.length < 10"
-            :src="require(`@/assets/flower-red.png`)"
-            :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
-          >
-        </div>
-        <div class="flower" v-for="(item, index) in bigFlowerRedPositionArray" :key="`big-${index}`">
-          <img
-            id="flower-red"
-            width="60"
-            v-if="bigFlowerRedPositionArray.length > 0"
-            :src="require(`@/assets/flower-red.png`)"
-            :style="{position: 'absolute', top: `${70+item.y}px`, left: `${50+item.x}px` }"
-          >
-        </div>
-        <div class="flower" v-for="(item, index) in flowerBluePositionArray" :key="`blue-${index}`">
-          <img
-            id="flower-blue"
-            width="30"
-            :src="require(`@/assets/flower-blue.png`)"
-            :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
-          >
-        </div>
-        <div class="flower" v-for="(item, index) in flowerWhitePositionArray" :key="`white-${index}`">
-          <img
-            id="flower-white"
-            width="30"
-            :src="require(`@/assets/flower-white.png`)"
-            :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
-          >
+      <div class="flower-block">
+        <div class="bed-block" :style="{position:`relative`}">
+          <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="500">
+          <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="`red-${index}`" :style="{position: 'absolute'}">
+            <img
+              id="flower-red"
+              width="30"
+              v-if="flowerRedPositionArray.length"
+              :src="require(`@/assets/flower-red.png`)"
+              :style="{top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
+            >
+          </div>
+          <div class="flower" v-for="(item, index) in flowerBluePositionArray" :key="`blue-${index}`">
+            <img
+              id="flower-blue"
+              width="30"
+              :src="require(`@/assets/flower-blue.png`)"
+              :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
+            >
+          </div>
+          <div class="flower" v-for="(item, index) in flowerWhitePositionArray" :key="`white-${index}`">
+            <img
+              id="flower-white"
+              width="30"
+              :src="require(`@/assets/flower-white.png`)"
+              :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
+            >
+          </div>
         </div>
         <div class="bud-block">
           <div class="flower" v-for="(item, index) in budRedPositionArray" :key="`bud-red-${index}`">
@@ -64,25 +57,29 @@
             >
           </div>
         </div>
-        <div class="player-status"><h3>1. プレイヤー設定：{{ playerStatusText }}</h3></div>
-        <button
-          v-for="btn in playerSettingButtons" 
-          :key="btn.id"
-          @click="btnClicked(btn)">{{btn.title}}:{{ btn.color }}
-        </button>
-        <div class="feedback-controll">
+      </div>
+      <div class="setting-block" :style="{position:`relative`}">
+        <div class="player-status">
+          <h3>1. プレイヤー設定：{{ playerStatusText }}</h3>
+          <button
+            v-for="btn in playerSettingButtons" 
+            :key="btn.id"
+            @click="btnClicked(btn)">{{btn.title}}:{{ btn.color }}
+          </button>
+        </div>
+        <div class="feedback-control">
           <h3>2. DB接続</h3>
           <button class="test-start-button" v-on:click="startFeedback">Start</button>
           <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
         </div>
-        <div class="tracking-controll">
+        <div class="tracking-control">
           <h3>3. 会話行動検知</h3>
           <button class="test-start-button" v-on:click="startAllTracking">Start</button>
           <button class="test-stop-button" v-on:click="stopAllTracking">Stop</button>
         </div>
       </div>
     </div>
-    <div class="setting-recognition">
+    <div class="debug-setting-block">
       <h2>■ デバッグ</h2>
       <div class="count-all">
         <li>発話回数   ：{{ speechCount }}</li>
@@ -134,9 +131,9 @@ export default {
       position_flower_y: 50,
       motivationCount: 0,
       // Flower Array
-      flowerRedPositionArray: [],
-      flowerBluePositionArray: [],
-      flowerWhitePositionArray: [],
+      flowerRedPositionArray: [10, 20],
+      flowerBluePositionArray: [20, 40],
+      flowerWhitePositionArray: [30, 50],
       // Big Flower Array
       bigFlowerRedPositionArray: [],
       // Bud Array
@@ -195,12 +192,14 @@ export default {
   },
   watch: {
     nodCount: function() {
-      // this.countMeetingInfo();
-      this.postCountPlayer();
+      //TODO: 後ほど消す
+      this.countMeetingInfo();
+      // this.postCountPlayer();
     },
     speechCount: function() {
-      // this.countMeetingInfo();
-      this.postCountPlayer();
+      //TODO: 後ほど消す
+      this.countMeetingInfo();
+      // this.postCountPlayer();
     },
     motivationCount: function() {
       this.postCountPlayer();
@@ -360,7 +359,6 @@ export default {
     },
     countMeetingInfo: function() {
       this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
-      // this.budRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
     },
     getRandom: function(min, max) {
       min = Math.ceil(min);
@@ -479,19 +477,11 @@ button {
   color: #fff;
   background: #f56500;
   border: 1px solid #ccc;
-  margin: 0px;
-}
-
-.bed-block {
-  position: relative;
-  margin-bottom: 500px;
-}
-
-.flower-block {
-  position: absolute;
+  margin: 10px;
 }
 
 .bar-graph {
   display: flex;
 }
+
 </style>
