@@ -58,7 +58,7 @@
           </div>
         </div>
       </div>
-      <div class="setting-block" :style="{position:`relative`}">
+      <div class="setting-block">
         <div class="player-status">
           <h3>1. プレイヤー設定：{{ playerStatusText }}</h3>
           <button
@@ -68,12 +68,12 @@
           </button>
         </div>
         <div class="feedback-control">
-          <h3>2. DB接続</h3>
+          <h3>2. DB接続: {{ dbConnectionStatusText }}</h3>
           <button class="test-start-button" v-on:click="startFeedback">Start</button>
           <button class="test-stop-button" v-on:click="stopFeedback">Stop</button>
         </div>
         <div class="tracking-control">
-          <h3>3. 会話行動検知</h3>
+          <h3>3. 会話行動検知: {{ trackingStatusText }}</h3>
           <button class="test-start-button" v-on:click="startAllTracking">Start</button>
           <button class="test-stop-button" v-on:click="stopAllTracking">Stop</button>
         </div>
@@ -145,6 +145,8 @@ export default {
       beforeWhiteSpeechMotivation: 0,
       faceIntervalTimer: null,
       playerStatusText: "player-1",//"no setting",
+      dbConnectionStatusText: "未選択",
+      trackingStatusText: "未選択",
       playerSettingButtons: [
         { 
           cmd: 'setPlayer1',
@@ -221,6 +223,7 @@ export default {
         alert("playerを設定してください。");
         return;
       }
+      this.dbConnectionStatusText = "開始";
 
       const q = query(collection(this.firestoreDB, "players"));
       this.unsubscribeDB = onSnapshot(q, (snapshot) => {
@@ -265,10 +268,12 @@ export default {
       });
     },
     startAllTracking: function() {
+      this.trackingStatusText = "開始";
       this.startTracking();
       this.startDetectionSpeech();
     },
     stopAllTracking: function() {
+      this.trackingStatusText = "終了";
       this.stopTracking();
       this.stopVAD();
     },
@@ -284,6 +289,7 @@ export default {
     },
     stopFeedback: function() {
       console.log("stopFeedback");
+      this.dbConnectionStatusText = "終了";
       this.unsubscribeDB();
     },
     pushFlowerOfPlayer: function(playerID) {
