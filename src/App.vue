@@ -2,60 +2,17 @@
   <div id="app">
     <div class="gardening">
       <h2>■ フィードバック</h2>
-      <div class="flower-block">
-        <div class="bed-block" :style="{position:`relative`}">
-          <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="500">
-          <div class="flower" v-for="(item, index) in flowerRedPositionArray" :key="`red-${index}`" :style="{position: 'absolute'}">
-            <img
-              id="flower-red"
-              width="30"
-              v-if="flowerRedPositionArray.length"
-              :src="require(`@/assets/flower-red.png`)"
-              :style="{top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
-            >
-          </div>
-          <div class="flower" v-for="(item, index) in flowerBluePositionArray" :key="`blue-${index}`">
-            <img
-              id="flower-blue"
-              width="30"
-              :src="require(`@/assets/flower-blue.png`)"
-              :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
-            >
-          </div>
-          <div class="flower" v-for="(item, index) in flowerWhitePositionArray" :key="`white-${index}`">
-            <img
-              id="flower-white"
-              width="30"
-              :src="require(`@/assets/flower-white.png`)"
-              :style="{position: 'absolute', top: `${position_flower_y+200-item.y}px`, left: `${position_flower_x+350-item.x}px` }"
-            >
-          </div>
-        </div>
-        <div class="bud-block">
-          <div class="flower" v-for="(item, index) in budRedPositionArray" :key="`bud-red-${index}`">
-            <img
-              id="bud-white"
-              width="20"
-              :src="require(`@/assets/bud-red.png`)"
-              :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
-            >
-          </div>
-          <div class="flower" v-for="(item, index) in budBluePositionArray" :key="`bud-blue-${index}`">
-            <img
-              id="bud-blue"
-              width="20"
-              :src="require(`@/assets/bud-blue.png`)"
-              :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
-            >
-          </div>
-          <div class="flower" v-for="(item, index) in budWhitePositionArray" :key="`bud-white-${index}`">
-            <img
-              id="bud-white"
-              width="20"
-              :src="require(`@/assets/bud-white.png`)"
-              :style="{position: 'absolute', top: `${position_flower_y+item.y}px`, left: `${position_flower_x+item.x}px` }"
-            >
-          </div>
+      <div class="flower-block" :style="{position: `relative`}">
+        <img id="bed" :src="require(`@/assets/flower-bed.png`)" width="535">
+        <!-- 花の表示 -->
+        <div class="flower" v-for="(item, index) in displayFlowerPostionArray" :key="`red-${index}`">
+          <img
+            id="flower-red"
+            width="50"
+            v-if="item.status"
+            :src="item.image"
+            :style="{position: 'absolute', top: gardenPadding + item.y + 'px', left: gardenPadding + item.x + 'px' }"
+          >
         </div>
       </div>
       <div class="setting-block">
@@ -105,7 +62,8 @@
 <script>
 import vad from 'voice-activity-detection';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import firebaseConfig from "./firebase.js"
+import positionArray from "./position.js";
+import firebaseConfig from "./firebase.js";
 import { initializeApp } from "firebase/app";
 import { getFirestore, onSnapshot, collection, query, doc, updateDoc } from 'firebase/firestore';
 
@@ -127,19 +85,22 @@ export default {
       meanPose: [],
       nodAverageScore: 0,
       nodCount: 0,
-      position_flower_x: 70,
-      position_flower_y: 50,
       motivationCount: 0,
       // Flower Array
-      flowerRedPositionArray: [10, 20],
-      flowerBluePositionArray: [20, 40],
-      flowerWhitePositionArray: [30, 50],
-      // Big Flower Array
-      bigFlowerRedPositionArray: [],
-      // Bud Array
-      budRedPositionArray: [],
-      budBluePositionArray: [],
-      budWhitePositionArray: [],
+      flowerImageType: {
+        redFlower: require(`@/assets/flower-red.png`),
+        blueFlower: require(`@/assets/flower-blue.png`),
+        whiteFlower: require(`@/assets/flower-white.png`),
+        witheredFlower: require(`@/assets/flower-withered.png`),
+        redBud: require(`@/assets/bud-red.png`),
+        blueBud: require(`@/assets/bud-blue.png`),
+        whiteBud: require(`@/assets/bud-white.png`),
+        none: null,
+      },
+      gardenPadding: 30,
+      flowerImage: null,
+      flowerPosition: positionArray,
+      displayFlowerPostionArray: [],
       beforeRedSpeechMotivation: 0,
       beforeBlueSpeechMotivation: 0,
       beforeWhiteSpeechMotivation: 0,
@@ -189,19 +150,24 @@ export default {
     const app = initializeApp(firebaseConfig);
     this.firestoreDB = getFirestore(app);
     console.log(this.firestoreDB);
-
-    // this.startTracking();
   },
   watch: {
     nodCount: function() {
-      //TODO: 後ほど消す
-      this.countMeetingInfo();
-      // this.postCountPlayer();
+      this.postCountPlayer();
     },
     speechCount: function() {
-      //TODO: 後ほど消す
-      this.countMeetingInfo();
-      // this.postCountPlayer();
+      // TODO: テスト実装
+      // let flowerImageTypeArray = [
+      //   this.flowerImageType.redFlower,
+      //   this.flowerImageType.blueFlower,
+      //   this.flowerImageType.whiteFlower,
+      //   // this.flowerImageType.redBud,
+      //   // this.flowerImageType.blueBud,
+      //   // this.flowerImageType.whiteBud
+      // ]
+      // const testImage = flowerImageTypeArray[Math.floor(Math.random() * flowerImageTypeArray.length)];
+      // this.displayFlowerImage(testImage);
+      this.postCountPlayer();
     },
     motivationCount: function() {
       this.postCountPlayer();
@@ -218,6 +184,45 @@ export default {
     }
   },
   methods: {
+    displayFlowerImage: function (displayImageType) {
+      if(!this.flowerPosition.length) { return }
+
+      // ランダムにindexを算出して，フラワー表示配列から表示するIDを取得
+      const randomIndex = Math.floor(Math.random() * this.flowerPosition.length);
+      const randomFlowerPosition = this.flowerPosition[randomIndex];
+
+      // flowerPositionIDに紐づくflowerPositionのステータスを変更
+      const index = this.flowerPosition.indexOf(randomFlowerPosition);
+      this.flowerPosition[index].status = true;
+      this.flowerPosition[index].image = displayImageType
+      this.setRemoveFlowerTimer(this.flowerPosition[index]);
+
+      // 表示されるflowerPosition表示済配列に格納
+      this.displayFlowerPostionArray.push(this.flowerPosition[index]);
+      // 表示されるflowerPositionの要素を配列から削除
+      this.flowerPosition.splice(index, 1);
+    },
+    setRemoveFlowerTimer: function (flowerPosition) {
+      // 15秒後に非表示処理処理
+      setTimeout(() => {
+        const index = this.displayFlowerPostionArray.indexOf(flowerPosition);
+        this.displayFlowerPostionArray[index].image = this.flowerImageType.witheredFlower;
+      }, 30000);
+
+      // 30秒後に非表示処理処理
+      setTimeout(() => {
+        console.log("remove flower");
+        // 表示済配列から花のオブジェクトと一致するindexを取得
+        const index = this.displayFlowerPostionArray.indexOf(flowerPosition);
+        this.displayFlowerPostionArray[index].status = false;
+        this.displayFlowerPostionArray[index].image = this.flowerImageType.none;
+
+        // 非表示にされた花のオブジェクトをフラワー表示配列に格納
+        this.flowerPosition.push(this.displayFlowerPostionArray[index]);
+        // 表示済配列から非表示にされた花のオブジェクトの要素を削除
+        this.displayFlowerPostionArray.splice(index, 1);
+      }, 60000);
+    },
     startFeedback: async function() {
       if (this.playerStatusText === "no setting") {
         alert("playerを設定してください。");
@@ -230,7 +235,8 @@ export default {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
             console.log("New Add: ", change.doc.data());
-            this.setFlowerOfPlayer(change.doc.id, change.doc.data());
+            // DBのカウント数に合わせて花の表示を行う（ランダム表示）
+            this.setFlowerCountWithDB(change.doc.id, change.doc.data());
             this.countStatus = change.doc.data(); 
           }
           if (change.type === "modified") {
@@ -240,23 +246,27 @@ export default {
             switch(change.doc.id) {
               case 'player-1':
                 if (this.beforeRedSpeechMotivation < change.doc.data().motivation) {
-                  this.pushBudOfPlayer(change.doc.id, change.doc.data().motivation);
+                  // speechtとnod または motivationか判断するために変更前のカウントを格納しておく
+                  this.beforeRedSpeechMotivation = change.doc.data().motivation;
+                  this.setBudTypeWithDB(change.doc.id);
                 } else {
-                  this.pushFlowerOfPlayer(change.doc.id);
+                  this.setFlowerTypeWithDB(change.doc.id);
                 }
                 break
               case 'player-2':
                 if (this.beforeBlueSpeechMotivation < change.doc.data().motivation) {
-                  this.pushBudOfPlayer(change.doc.id, change.doc.data().motivation);
+                  this.beforeBlueSpeechMotivation = change.doc.data().motivation;
+                  this.setBudTypeWithDB(change.doc.id);
                 } else {
-                  this.pushFlowerOfPlayer(change.doc.id);
+                  this.setFlowerTypeWithDB(change.doc.id);
                 }
                 break
               case 'player-3':
                 if (this.beforeWhiteSpeechMotivation < change.doc.data().motivation) {
-                  this.pushBudOfPlayer(change.doc.id, change.doc.data().motivation);
+                  this.beforeWhiteSpeechMotivation = change.doc.data().motivation;
+                  this.setBudTypeWithDB(change.doc.id);
                 } else {
-                  this.pushFlowerOfPlayer(change.doc.id);
+                  this.setFlowerTypeWithDB(change.doc.id);
                 }
                 break
             }
@@ -277,14 +287,14 @@ export default {
       this.stopTracking();
       this.stopVAD();
     },
-    setFlowerOfPlayer: function(playerID, docData) {
+    setFlowerCountWithDB: function(playerID, docData) {
       const flowerCount = docData.speech + docData.nod;
       for (let i=0; i<flowerCount; i++) {
-        this.pushFlowerOfPlayer(playerID);
+        this.setFlowerTypeWithDB(playerID);
       }
 
       for (let i=0; i<docData.motivation; i++) {
-        this.pushBudOfPlayer(playerID);
+        this.setBudTypeWithDB(playerID);
       }
     },
     stopFeedback: function() {
@@ -292,37 +302,29 @@ export default {
       this.dbConnectionStatusText = "終了";
       this.unsubscribeDB();
     },
-    pushFlowerOfPlayer: function(playerID) {
+    setFlowerTypeWithDB: function(playerID) {
       switch(playerID) {
         case 'player-1':
-          if (this.flowerRedPositionArray.length >= 10) {
-            this.bigFlowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
-            this.flowerRedPositionArray.splice(0);
-          } else {
-            this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
-          }
+          this.displayFlowerImage(this.flowerImageType.redFlower);
           break
         case 'player-2':
-          this.flowerBluePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          this.displayFlowerImage(this.flowerImageType.blueFlower);
           break
         case 'player-3':
-          this.flowerWhitePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          this.displayFlowerImage(this.flowerImageType.whiteFlower);
           break
       }
     },
-    pushBudOfPlayer: function(playerID, motivation) {
+    setBudTypeWithDB: function(playerID) {
       switch(playerID) {
         case 'player-1':
-          this.beforeRedSpeechMotivation = motivation;
-          this.budRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          this.displayFlowerImage(this.flowerImageType.redBud);
           break
         case 'player-2':
-          this.beforeBlueSpeechMotivation = motivation;
-          this.budBluePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          this.displayFlowerImage(this.flowerImageType.blueBud);
           break
         case 'player-3':
-          this.beforeWhiteSpeechMotivation = motivation;
-          this.budWhitePositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
+          this.displayFlowerImage(this.flowerImageType.whiteBud);
           break
       }
     },
@@ -363,15 +365,6 @@ export default {
           this.setPlayer(1);
       }
     },
-    countMeetingInfo: function() {
-      this.flowerRedPositionArray.push({x: this.getRandom(0, 350), y: this.getRandom(0, 210)});
-    },
-    getRandom: function(min, max) {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      const result = Math.floor(Math.random() * (max - min + 1) + min);
-      return result
-    },
     startTracking: async function() {
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
       const detectorConfig = {
@@ -390,14 +383,14 @@ export default {
         if (this.meanPose.length < 10) {
           this.nodCount = 0;
           this.nodAverageScore = this.calcAverage;
-          console.log("nod count: skippppppp");
+          console.log("nod count: skip");
           return
         }
 
         console.log("nod: average" + this.nodAverageScore);
         // 平均の基準よりも下を向いているか
         if (this.nodAverageScore + 30 < faces[0].keypoints[1].y) {
-          console.log("nodカウント！！！！！！！！！！！！！！");
+          console.log("****** nodカウント ******");
           this.nodCount += 1;
           this.countStatus.nod += 1;
           console.log(this.nodCount);
@@ -408,12 +401,12 @@ export default {
         const mouseOpened = underLipPoint - topLipPoint
         if (!this.isSpeech && (10 < mouseOpened && mouseOpened < 20)) {
           console.log("top: "+topLipPoint+"under: "+underLipPoint+"\n"+"mouseOpened: "+mouseOpened);
-          console.log("motivationカウント！！！！！！！！！！！！！！");
+          console.log("****** motivationカウント ******");
           this.motivationCount += 1;
           this.countStatus.motivation += 1;
           return
         }
-        console.log("motivation count: skippppppp");
+        console.log("motivation count: skip");
       }, 1000) // 1秒間
     },
     stopTracking: function() {
@@ -428,7 +421,7 @@ export default {
           this.isSpeechCount = true;
           return;
         }
-        console.log("speechカウント！！！！！！！！！！！！！！");
+        console.log("****** speechカウント ******");
         this.speechCount += 1;
         this.countStatus.speech += 1;
         console.log("this.countStatus.speech: "+this.countStatus.speech);
@@ -486,8 +479,8 @@ button {
   margin: 10px;
 }
 
-.bar-graph {
-  display: flex;
+.debug-setting-block {
+  padding-top: 500px;
 }
 
 </style>
