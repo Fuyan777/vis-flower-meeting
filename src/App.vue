@@ -21,7 +21,7 @@
           <button
             v-for="btn in playerSettingButtons" 
             :key="btn.id"
-            @click="btnClicked(btn)">{{btn.title}}:{{ btn.color }}
+            @click="setPlayer(btn)">{{btn.title}}:{{ btn.color }}
           </button>
         </div>
         <div class="feedback-control">
@@ -336,22 +336,19 @@ export default {
         console.log("Reset player: ", this.playerSettingButtons[index].title);
       });
     },
-    setPlayer: function(num) {
-      this.playerStatusText = "player-" + num;
-    },
-    btnClicked(command) {
+    setPlayer(command) {
       switch(command.cmd) {
         case 'setPlayer1':
-          this.setPlayer(1);
+          this.playerStatusText = "player-1";
           break
         case 'setPlayer2':
-          this.setPlayer(2);
+          this.playerStatusText = "player-2";
           break
         case 'setPlayer3':
-          this.setPlayer(3);
+          this.playerStatusText = "player-3";
           break
         default:
-          this.setPlayer(1);
+          this.playerStatusText = "player-1";
       }
     },
     startTracking: async function() {
