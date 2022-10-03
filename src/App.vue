@@ -361,11 +361,13 @@ export default {
 
       this.faceIntervalTimer = setInterval(async() => {
         const faces = await this.detector.estimateFaces(this.video);
+
+        // MARK: - Nod Recognition
         this.meanPose.push(faces[0].keypoints[1].y);
         // keypoint
-        console.log(faces[0].keypoints[1].y);
+        this.outputDebug("nod point",faces[0].keypoints[1].y);
 
-        // meanPoseが空の場合、skipする
+        // meanPoseのサンプル数が10以下の場合、skipする
         if (this.meanPose.length < 10) {
           this.nodCount = 0;
           this.nodAverageScore = this.calcAverage;
@@ -373,21 +375,23 @@ export default {
           return
         }
 
-        console.log("nod: average" + this.nodAverageScore);
+        // 10秒ごとのnodの平均算出
+        this.outputDebug("nod average", this.nodAverageScore);
         // 平均の基準よりも下を向いているか
         if (this.nodAverageScore + 30 < faces[0].keypoints[1].y) {
-          console.log("****** nodカウント ******");
+          console.log("****** nod count ******");
           this.nodCount += 1;
           this.countStatus.nod += 1;
           console.log(this.nodCount);
         }
 
+        // MARK: - Mouth Recognition
         const topLipPoint = faces[0].keypoints[13].y
         const underLipPoint = faces[0].keypoints[14].y
         const mouseOpened = underLipPoint - topLipPoint
         if (!this.isSpeech && (10 < mouseOpened && mouseOpened < 20)) {
           console.log("top: "+topLipPoint+"under: "+underLipPoint+"\n"+"mouseOpened: "+mouseOpened);
-          console.log("****** motivationカウント ******");
+          console.log("****** motivation count ******");
           this.motivationCount += 1;
           this.countStatus.motivation += 1;
           return
@@ -410,7 +414,7 @@ export default {
         console.log("****** speechカウント ******");
         this.speechCount += 1;
         this.countStatus.speech += 1;
-        console.log("this.countStatus.speech: "+this.countStatus.speech);
+        this.outputDebug("this.countStatus.speech", this.countStatus.speech);
       })
     },
     setVAD: function(update, stopHandler) {
