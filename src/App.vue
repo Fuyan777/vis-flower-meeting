@@ -223,7 +223,8 @@ export default {
       this.unsubscribeDB = onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added") {
-            console.log("New Add: ", change.doc.data());
+            
+            console.log("Modified: ", change.doc.data());
             // DBのカウント数に合わせて花の表示を行う（ランダム表示）
             this.setFlowerCountWithDB(change.doc.id, change.doc.data());
             this.countStatus = change.doc.data(); 
@@ -383,6 +384,7 @@ export default {
           this.nodCount += 1;
           this.countStatus.nod += 1;
           console.log(this.nodCount);
+          this.outputDebug("this.countStatus.nod", this.countStatus.nod);
         }
 
         // MARK: - Mouth Recognition
@@ -394,6 +396,7 @@ export default {
           console.log("****** motivation count ******");
           this.motivationCount += 1;
           this.countStatus.motivation += 1;
+          this.outputDebug("this.countStatus.motivation", this.countStatus.motivation);
           return
         }
         console.log("motivation count: skip");
@@ -420,11 +423,11 @@ export default {
     setVAD: function(update, stopHandler) {
       let vadOptions = {
         onVoiceStart: function() {
-            console.log('voice start');
-            this.isSpeech = true;
+          console.log("Voice Start");
+          this.isSpeech = true;
         },
         onVoiceStop: function() {
-            console.log('voice stop');
+            console.log("Voice Stop");
             this.isSpeech = false;
             stopHandler();
         },
@@ -442,7 +445,7 @@ export default {
       }
     },
     stopVAD: function() {
-      console.log("vadObject destroy");
+      console.log("VadObject Destroy");
       this.vadObject.destroy();
       this.vadObject = null;
     },
