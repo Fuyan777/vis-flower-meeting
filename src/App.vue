@@ -441,6 +441,12 @@ export default {
       console.log("vadObject destroy");
       this.vadObject.destroy();
       this.vadObject = null;
+    },
+    outputDebug: function(message, value) {
+      if(message === null) { message = "" }
+      if(value === null) { value = "" }
+
+      console.log("【Debug】: "+message+" - "+value);
     }
   }
 }
