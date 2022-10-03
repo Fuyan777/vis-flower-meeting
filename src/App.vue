@@ -156,17 +156,6 @@ export default {
       this.postCountPlayer();
     },
     speechCount: function() {
-      // TODO: テスト実装
-      // let flowerImageTypeArray = [
-      //   this.flowerImageType.redFlower,
-      //   this.flowerImageType.blueFlower,
-      //   this.flowerImageType.whiteFlower,
-      //   // this.flowerImageType.redBud,
-      //   // this.flowerImageType.blueBud,
-      //   // this.flowerImageType.whiteBud
-      // ]
-      // const testImage = flowerImageTypeArray[Math.floor(Math.random() * flowerImageTypeArray.length)];
-      // this.displayFlowerImage(testImage);
       this.postCountPlayer();
     },
     motivationCount: function() {
