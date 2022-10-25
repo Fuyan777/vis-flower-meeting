@@ -2,11 +2,7 @@
 
 ## overview
 
-https://user-images.githubusercontent.com/29572313/197813831-2069b1db-6b7a-42e2-ade6-d1a3f55012a1.png
-
-## demo movie
-
-
+<img width="367" alt="スクリーンショット 2022-10-26 0 23 00" src="https://user-images.githubusercontent.com/29572313/197814991-03419051-3cd2-44b0-82b7-bbb2615de56e.png">
 
 ## Project setup
 ```
