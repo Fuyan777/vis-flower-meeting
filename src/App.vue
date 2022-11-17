@@ -199,13 +199,13 @@ export default {
       this.flowerPosition.splice(index, 1);
     },
     setRemoveFlowerTimer: function (flowerPosition) {
-      // 15秒後に非表示処理処理
+      // 10秒後に枯れ花表示
       setTimeout(() => {
         const index = this.displayFlowerPostionArray.indexOf(flowerPosition);
         this.displayFlowerPostionArray[index].image = this.flowerImageType.witheredFlower;
       }, 30000);
 
-      // 30秒後に非表示処理処理
+      // 2秒後に枯れ花表示
       setTimeout(() => {
         console.log("remove flower");
         // 表示済配列から花のオブジェクトと一致するindexを取得
@@ -217,7 +217,7 @@ export default {
         this.flowerPosition.push(this.displayFlowerPostionArray[index]);
         // 表示済配列から非表示にされた花のオブジェクトの要素を削除
         this.displayFlowerPostionArray.splice(index, 1);
-      }, 60000);
+      }, 32000);
     },
     startFeedback: async function() {
       if (this.playerStatusText === "no setting") {
@@ -441,6 +441,10 @@ export default {
     },
     setVAD: function(update, stopHandler) {
       let vadOptions = {
+        minCaptureFreq: 100,
+        maxCaptureFreq: 300,
+        minNoiseLevel: 0.5,
+        maxNoiseLevel: 0.5,
         onVoiceStart: function() {
           console.log("Voice Start");
           this.isSpeech = true;
